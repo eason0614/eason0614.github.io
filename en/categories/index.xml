@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on Eason&#39;s blog</title>
+    <link>//localhost:1313/en/categories/</link>
+    <description>Recent content in Categories on Eason&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <managingEditor>jack8406144@gmail.com (Eason Chiu)</managingEditor>
+    <webMaster>jack8406144@gmail.com (Eason Chiu)</webMaster>
+    <copyright>© 2025 Eason Chiu</copyright>
+    <lastBuildDate>Mon, 03 Feb 2025 14:36:11 +0900</lastBuildDate><atom:link href="//localhost:1313/en/categories/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Leetcode</title>
+      <link>//localhost:1313/en/categories/leetcode/</link>
+      <pubDate>Mon, 03 Feb 2025 14:36:11 +0900</pubDate>
+      <author>jack8406144@gmail.com (Eason Chiu)</author>
+      <guid>//localhost:1313/en/categories/leetcode/</guid>
+      <description></description>
+      
+    </item>
+    
+  </channel>
+</rss>
