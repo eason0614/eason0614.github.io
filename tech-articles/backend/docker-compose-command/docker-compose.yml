@@ -1,0 +1,118 @@
+services:
+  # PostgreSQL 資料庫
+  postgres:
+    image: postgres:15-alpine
+    container_name: purchasing-postgres
+    environment:
+      POSTGRES_DB: purchasing_agent
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      TZ: Asia/Taipei
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - purchasing-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis 快取
+  redis:
+    image: redis:7-alpine
+    container_name: purchasing-redis
+    environment:
+      TZ: Asia/Taipei
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - ./data/redis:/data
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - purchasing-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Spring Boot 後端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: purchasing-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/purchasing_agent
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres123}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
+      - JWT_SECRET=${JWT_SECRET:-mySecretKey123!@#}
+      - TZ=Asia/Taipei
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - purchasing-network
+    volumes:
+      - ./logs/backend:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Vue.js 前端
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: purchasing-frontend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api
+      - TZ=Asia/Taipei
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - purchasing-network
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /etc/localtime:/etc/localtime:ro
+
+  # pgAdmin (資料庫管理工具)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: purchasing-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@purchasing.com
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      TZ: Asia/Taipei
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - purchasing-network
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin
+      - /etc/localtime:/etc/localtime:ro
+
+networks:
+  purchasing-network:
+    driver: bridge 
